@@ -1,0 +1,119 @@
+# @getmocha/users-service
+
+An SDK for interacting with the Mocha Users Service, providing authentication and user management functionality for Hono applications.
+
+## Installation
+
+```bash
+npm install @getmocha/users-service
+```
+
+## Features
+
+- Google OAuth authentication via the Mocha Users Service
+- Session management
+- User information retrieval
+- Hono middleware for protected routes
+
+## Usage
+
+### Authentication Flow
+
+Use the @getmocha/users-service/backend export for backend functionality and Hono support.
+
+1. **Get OAuth Redirect URL**
+
+```typescript
+import { getOAuthRedirectUrl } from '@getmocha/users-service/backend';
+
+// In your API handler
+app.get('/api/oauth/google/redirect_url', async (c) => {
+  const redirectUrl = await getOAuthRedirectUrl('google', {
+    apiUrl: c.env.MOCHA_USERS_SERVICE_API_URL,
+    apiKey: c.env.MOCHA_USERS_SERVICE_API_KEY,
+  });
+
+  return c.json({ redirectUrl }, 200);
+});
+```
+
+2. **Exchange Code for Session Token**
+
+```typescript
+import {
+  exchangeCodeForSessionToken,
+  MOCHA_SESSION_TOKEN_COOKIE_NAME,
+} from '@getmocha/users-service/backend';
+import { setCookie } from 'hono/cookie';
+
+// In your API handler for the callback
+app.post('/api/sessions', async (c) => {
+  const { code } = await c.req.json();
+
+  const sessionToken = await exchangeCodeForSessionToken(code, {
+    apiUrl: c.env.MOCHA_USERS_SERVICE_API_URL,
+    apiKey: c.env.MOCHA_USERS_SERVICE_API_KEY,
+  });
+
+  // Set the session cookie
+  setCookie(c, MOCHA_SESSION_TOKEN_COOKIE_NAME, sessionToken, {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'none',
+    secure: true,
+    maxAge: 60 * 24 * 60 * 60, // 60 days
+  });
+
+  return c.json({ success: true });
+});
+```
+
+3. **Protect Routes with Auth Middleware**
+
+```typescript
+import { authMiddleware } from '@getmocha/users-service/backend';
+import { Hono } from 'hono';
+
+// Create your Hono app
+const app = new Hono();
+
+// Use the middleware to protect routes
+app.get('/api/protected-route', authMiddleware, async (c) => {
+  // The user is available in the context
+  const user = c.get('user');
+
+  return c.json({ message: `Hello, ${user.email}!` });
+});
+```
+
+4. **Get Current User**
+
+```typescript
+import { authMiddleware } from '@getmocha/users-service/backend';
+import { Hono } from 'hono';
+
+// Create your Hono app
+const app = new Hono();
+
+app.get('/api/users/me', authMiddleware, async (c) => {
+  const user = c.get('user');
+  return c.json(user);
+});
+```
+
+### Shared
+
+Use the @getmocha/users-service/shared export for functionality that can be used on the frontend or backend.
+
+For example, the `MochaUser` TypeScript type.
+
+```typescript
+import type { MochaUser } from '@getmocha/users-service/shared';
+import { Hono } from 'hono';
+
+type Variables = {
+  user?: MochaUser;
+};
+
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+```

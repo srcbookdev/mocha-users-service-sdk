@@ -1,0 +1,57 @@
+{
+  "name": "@getmocha/users-service",
+  "version": "0.0.1",
+  "description": "An API client and Hono middleware for the Mocha Users Service",
+  "author": "Mocha (https://getmocha.com)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "backend": [
+        "./dist/backend.d.ts"
+      ],
+      "shared": [
+        "./dist/shared.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    "./backend": {
+      "import": "./dist/backend.js",
+      "types": "./dist/backend.d.ts"
+    },
+    "./shared": {
+      "import": "./dist/shared.js",
+      "types": "./dist/shared.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "check-format": "prettier --check .",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build && npm run check-format",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mocha",
+    "users service",
+    "auth",
+    "authentication",
+    "oauth"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "hono": "^4.8.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  }
+}
