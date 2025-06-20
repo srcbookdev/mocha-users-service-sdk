@@ -101,7 +101,7 @@ app.get('/api/users/me', authMiddleware, async (c) => {
 });
 ```
 
-5. ** Logout **
+5. **Logout**
 
 ```typescript
 import { deleteSession } from '@getmocha/users-service/backend';
