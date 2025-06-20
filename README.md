@@ -111,7 +111,7 @@ import { getCookie, setCookie } from 'hono/cookie';
 // Create your Hono app
 const app = new Hono();
 
-app.get('/logout', async (c) => {
+app.get('/api/logout', async (c) => {
   const sessionToken = getCookie(c, MOCHA_SESSION_TOKEN_COOKIE_NAME);
 
   if (typeof sessionToken === 'string') {
@@ -121,7 +121,8 @@ app.get('/logout', async (c) => {
     });
   }
 
-  // Delete cookie by setting max age to 0
+  // Delete cookie by setting max age to 0 These params must match the ones
+  // used when setting the cookie, except max age (0) and the cookie value ('').
   setCookie(c, MOCHA_SESSION_TOKEN_COOKIE_NAME, '', {
     httpOnly: true,
     path: '/',
