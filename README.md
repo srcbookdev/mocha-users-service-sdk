@@ -101,6 +101,39 @@ app.get('/api/users/me', authMiddleware, async (c) => {
 });
 ```
 
+5. ** Logout **
+
+```typescript
+import { deleteSession } from '@getmocha/users-service/backend';
+import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
+
+// Create your Hono app
+const app = new Hono();
+
+app.get('/logout', async (c) => {
+  const sessionToken = getCookie(c, MOCHA_SESSION_TOKEN_COOKIE_NAME);
+
+  if (typeof sessionToken === 'string') {
+    await deleteSession(sessionToken, {
+      apiUrl: c.env.MOCHA_USERS_SERVICE_API_URL,
+      apiKey: c.env.MOCHA_USERS_SERVICE_API_KEY,
+    });
+  }
+
+  // Delete cookie by setting max age to 0
+  setCookie(c, MOCHA_SESSION_TOKEN_COOKIE_NAME, '', {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'none',
+    secure: true,
+    maxAge: 0,
+  });
+
+  return c.json({ success: true }, 200);
+});
+```
+
 ### Shared
 
 Use the @getmocha/users-service/shared export for functionality that can be used on the frontend or backend.

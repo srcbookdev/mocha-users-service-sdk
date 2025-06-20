@@ -119,6 +119,30 @@ export async function getCurrentUser(
 }
 
 /**
+ * Delete the current session in the Mocha Users Service when logging out.
+ * @param sessionToken - The users session token from their cookie.
+ * @param options - Configuration options including API key and optional API URL
+ */
+export async function deleteSession(
+  sessionToken: string,
+  options: MochaUsersServiceOptions
+): Promise<void> {
+  const apiUrl = options.apiUrl || DEFAULT_MOCHA_USERS_SERVICE_API_URL;
+
+  try {
+    await fetch(`${apiUrl}/sessions`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        'x-api-key': options.apiKey,
+      },
+    });
+  } catch (error) {
+    console.error('Error deleting session:', error);
+  }
+}
+
+/**
  * Hono middleware that authenticates requests against the Mocha Users Service.
  *
  * This middleware requests the current user using the session token stored in
