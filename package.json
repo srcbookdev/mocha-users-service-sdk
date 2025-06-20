@@ -1,6 +1,6 @@
 {
   "name": "@getmocha/users-service",
-  "version": "0.0.2-dev.0",
+  "version": "0.0.2",
   "description": "An API client and Hono middleware for the Mocha Users Service",
   "author": "Mocha (https://getmocha.com)",
   "license": "Apache-2.0",
