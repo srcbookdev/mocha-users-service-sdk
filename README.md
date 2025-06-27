@@ -1,6 +1,6 @@
 # @getmocha/users-service
 
-An SDK for interacting with the Mocha Users Service, providing authentication and user management functionality for Hono applications.
+An SDK for interacting with the Mocha Users Service, providing authentication and user management functionality for Hono and React applications.
 
 ## Installation
 
@@ -14,10 +14,11 @@ npm install @getmocha/users-service
 - Session management
 - User information retrieval
 - Hono middleware for protected routes
+- A React context provider and associated hook for managing user and authentication state in React apps.
 
 ## Usage
 
-### Authentication Flow
+### Backend Authentication Flow
 
 Use the @getmocha/users-service/backend export for backend functionality and Hono support.
 
@@ -150,4 +151,31 @@ type Variables = {
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+```
+
+### Frontend React package
+
+Use the @getmocha/users-service/react export for a React context provider and hook that provides user and authentication management.
+
+```tsx
+import { AuthProvider } from '@getmocha/users-service/react';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+```
+
+Then you can use the exported `useAuth` hook.
+
+```tsx
+const { user, loadUser, redirectToUrl, logout, exchangeCodeForSessionToken } = useAuth();
 ```
