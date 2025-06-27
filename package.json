@@ -1,7 +1,7 @@
 {
   "name": "@getmocha/users-service",
   "version": "0.0.2",
-  "description": "An API client and Hono middleware for the Mocha Users Service",
+  "description": "An API client, Hono middleware, and a React provider for the Mocha Users Service",
   "author": "Mocha (https://getmocha.com)",
   "license": "Apache-2.0",
   "type": "module",
@@ -9,6 +9,9 @@
     "*": {
       "backend": [
         "./dist/backend.d.ts"
+      ],
+      "react": [
+        "./dist/react.d.ts"
       ],
       "shared": [
         "./dist/shared.d.ts"
@@ -19,6 +22,10 @@
     "./backend": {
       "import": "./dist/backend.js",
       "types": "./dist/backend.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react.js",
+      "types": "./dist/react.d.ts"
     },
     "./shared": {
       "import": "./dist/shared.js",
@@ -47,11 +54,14 @@
     "access": "public"
   },
   "peerDependencies": {
-    "hono": "^4.0.0"
+    "hono": "^4.0.0",
+    "react": "^18.0.0"
   },
   "devDependencies": {
+    "@types/react": "^18.0.0",
     "hono": "^4.8.0",
     "prettier": "^3.5.3",
+    "react": "^18.0.0",
     "typescript": "^5.8.3"
   }
 }
