@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { MochaUser } from '@getmocha/users-service/shared';
 
 export interface AuthContextValue {
@@ -9,11 +9,22 @@ export interface AuthContextValue {
   user: MochaUser | null;
 
   /**
-   * Makes a GET request to /api/users/me to get the current user.
+   * `true` when the `AuthProvider` is fetching the `user` object on mount.
+   * Use this to show initial loading states or block until knowing the authentication status.
+   */
+  isPending: boolean;
+
+  /**
+   * `true` any time the `user` object is being fetched.
+   */
+  isFetching: boolean;
+
+  /**
+   * Makes a GET request to /api/users/me to fetch the current user.
    * If the user is authenticated, the `user` object will be updated
    * with the current user's data. Otherwise, `user` will be `null`.
    */
-  loadUser: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 
   /**
    * Makes a GET request to /api/oauth/google/redirect_url to get the login redirect URL.
@@ -44,8 +55,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
  * Install this at the top of the React component tree to provide authentication
  * and user management functionality. This is needed for the `useAuth` hook to work.
  *
- * This provider does not call `loadUser` when mounted. You must explicitly call `loadUser` to
- * initialize the current user and check authentication status.
+ * This will always fetch the `user` object on mount.
  *
  * @example
  * import { AuthProvider } from '@getmocha/users-service/react';
@@ -66,24 +76,39 @@ const AuthContext = createContext<AuthContextValue | null>(null);
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<MochaUser | null>(null);
+
+  // Use these to dedup requests. This is mostly for avoiding multiple
+  // calls from useEffects in dev, which could cause wonky behavior with
+  // the loading states or problems when exchanging code for session token.
   const userRef = useRef<Promise<void> | null>(null);
   const exchangeRef = useRef<Promise<void> | null>(null);
 
-  const loadUser = useCallback(async () => {
+  const [isPending, setIsPending] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const fetchUser = useCallback(async () => {
     if (userRef.current) return userRef.current;
 
     userRef.current = (async () => {
+      setIsFetching(true);
+
       try {
         const response = await fetch('/api/users/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        } else {
-          setUser(null);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user: API responded with HTTP status ${response.status}`
+          );
         }
+
+        const user: MochaUser = await response.json();
+
+        setUser(user);
       } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setUser(null);
+        throw error;
+      } finally {
+        setIsFetching(false);
+        userRef.current = null;
       }
     })();
 
@@ -149,21 +174,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Refetch user after successful code exchange to populate user state
-        await loadUser();
+        await fetchUser();
       } catch (error) {
         console.error(error);
+      } finally {
+        // exchangeRef is not set back to null on purpose.
+        // We only expect it to run once per full page load.
+        // If it's called more than once, it's either useEffect
+        // on page load in dev or a bug.
       }
     })(code);
 
     return exchangeRef.current;
-  }, [loadUser]);
+  }, [fetchUser]);
+
+  useEffect(() => {
+    fetchUser().then(
+      () => setIsPending(false),
+      () => setIsPending(false)
+    );
+  }, []);
 
   const contextValue: AuthContextValue = {
     user,
-    logout,
-    loadUser,
+    isPending,
+    isFetching,
+    fetchUser,
     redirectToLogin,
     exchangeCodeForSessionToken,
+    logout,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

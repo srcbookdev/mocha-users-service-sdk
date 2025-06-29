@@ -177,5 +177,13 @@ export default function App() {
 Then you can use the exported `useAuth` hook.
 
 ```tsx
-const { user, loadUser, redirectToUrl, logout, exchangeCodeForSessionToken } = useAuth();
+const {
+  user,
+  isPending,
+  isFetching,
+  fetchUser,
+  redirectToUrl,
+  exchangeCodeForSessionToken,
+  logout,
+} = useAuth();
 ```
